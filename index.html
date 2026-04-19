@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>M7FZTI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg-base: #0d0f14;
+        --bg-card: rgba(255, 255, 255, 0.05);
+        --bg-card2: rgba(255, 255, 255, 0.08);
+        --border: rgba(255, 255, 255, 0.08);
+        --green: #22c55e;
+        --green-dim: rgba(34, 197, 94, 0.15);
+        --red: #ef4444;
+        --red-dim: rgba(239, 68, 68, 0.15);
+        --orange: #f97316;
+        --orange-dim: rgba(249, 115, 22, 0.15);
+        --blue: #3b82f6;
+        --purple: #a855f7;
+        --text: #f1f5f9;
+        --text-muted: #94a3b8;
+        --radius: 14px;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg-base);
+        color: var(--text);
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        min-height: 100vh;
+      }
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 3px;
+      }
+
+      /* Glass card */
+      .glass {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        backdrop-filter: blur(12px);
+      }
+      .glass2 {
+        background: var(--bg-card2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+      }
+
+      /* Header */
+      header {
+        background: rgba(13, 15, 20, 0.9);
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(20px);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+
+      /* Balance */
+      .balance-amount {
+        font-size: clamp(2.2rem, 6vw, 3.5rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1;
+      }
+
+      /* Buttons */
+      .btn-add {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        font-size: 1.6rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.15s, box-shadow 0.15s;
+      }
+      .btn-add:hover {
+        transform: scale(1.08);
+      }
+      .btn-add:active {
+        transform: scale(0.95);
+      }
+      .btn-income {
+        background: var(--green);
+        color: #000;
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+      }
+      .btn-expense {
+        background: var(--red);
+        color: #fff;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+      }
+
+      /* Form controls */
+      input,
+      select,
+      textarea {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--text);
+        padding: 10px 14px;
+        width: 100%;
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--blue);
+      }
+      select option {
+        background: #1e2330;
+      }
+      input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1) opacity(0.5);
+      }
+
+      /* Modal */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+      }
+      .modal-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .modal-box {
+        background: #1a1d27;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        width: 100%;
+        max-width: 460px;
+        padding: 1.75rem;
+        transform: translateY(20px);
+        transition: transform 0.25s;
+      }
+      .modal-overlay.open .modal-box {
+        transform: translateY(0);
+      }
+
+      /* Category pill */
+      .cat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      /* Transaction row */
+      .tx-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 16px;
+        border-radius: 12px;
+        transition: background 0.15s;
+      }
+      .tx-row:hover {
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      /* Budget progress bar */
+      .prog-bar {
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+      .prog-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.5s ease;
+      }
+
+      /* Period tabs */
+      .period-tab {
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        transition: background 0.15s, color 0.15s;
+      }
+      .period-tab.active {
+        background: var(--blue);
+        color: #fff;
+      }
+
+      /* Notification toast */
+      #toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #1e2330;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 20px;
+        font-size: 0.9rem;
+        z-index: 200;
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.3s;
+        pointer-events: none;
+      }
+      #toast.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      /* Glow on balance card */
+      .balance-card {
+        background: linear-gradient(
+          135deg,
+          rgba(59, 130, 246, 0.12),
+          rgba(168, 85, 247, 0.12)
+        );
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .balance-card::before {
+        content: "";
+        position: absolute;
+        top: -40%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 80%;
+        background: radial-gradient(
+          ellipse,
+          rgba(59, 130, 246, 0.15),
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+
+      /* Section label */
+      .section-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
+      }
+
+      /* Chart container */
+      #chartWrap {
+        position: relative;
+        max-width: 260px;
+        margin: 0 auto;
+      }
+
+      /* Settings panel */
+      #settingsPanel {
+        position: fixed;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: min(380px, 100vw);
+        background: #1a1d27;
+        border-left: 1px solid var(--border);
+        z-index: 90;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
+        padding: 1.5rem;
+      }
+      #settingsPanel.open {
+        transform: translateX(0);
+      }
+      #settingsOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 89;
+        display: none;
+      }
+      #settingsOverlay.open {
+        display: block;
+      }
+
+      /* Exchange rate chip */
+      .rate-chip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 4px 10px;
+        font-size: 0.82rem;
+      }
+      .rate-chip input {
+        background: transparent;
+        border: none;
+        color: var(--text);
+        font-size: 0.82rem;
+        width: 90px;
+        padding: 0;
+        text-align: right;
+      }
+      .rate-chip input:focus {
+        border: none;
+      }
+
+      @media (max-width: 640px) {
+        .balance-amount {
+          font-size: 2rem;
+        }
+      }
+
+      /* Confirm dialog */
+      #confirmDialog {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 150;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+      }
+      #confirmDialog.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+      #confirmDialog .box {
+        background: #1a1d27;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        max-width: 360px;
+        width: 100%;
+        text-align: center;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-muted);
+      }
+      .empty-state .icon {
+        font-size: 3rem;
+        margin-bottom: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- HEADER -->
+    <header>
+      <div
+        class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3"
+      >
+        <div class="flex items-center gap-2">
+          <span style="font-size: 1.4rem">💰</span>
+          <span
+            style="font-weight: 800; font-size: 1.1rem; letter-spacing: -0.02em"
+            >Finance Tracker</span
+          >
+        </div>
+
+        <div class="flex items-center gap-3">
+          <!-- Exchange rate -->
+          <div class="rate-chip" title="1 USD = ? SYP — update daily">
+            <span style="color: var(--text-muted); white-space: nowrap"
+              >1 USD =</span
+            >
+            <input
+              type="number"
+              id="exchangeRateInput"
+              min="1"
+              step="1"
+              placeholder="13500"
+            />
+            <span style="color: var(--text-muted)">SYP</span>
+            <button
+              onclick="saveExchangeRate()"
+              style="
+                background: var(--blue);
+                border: none;
+                border-radius: 6px;
+                color: #fff;
+                padding: 3px 8px;
+                cursor: pointer;
+                font-size: 0.75rem;
+                font-weight: 700;
+              "
+            >
+              Save
+            </button>
+          </div>
+
+          <!-- Settings -->
+          <button
+            onclick="openSettings()"
+            style="
+              background: rgba(255, 255, 255, 0.07);
+              border: 1px solid var(--border);
+              border-radius: 10px;
+              padding: 7px 12px;
+              cursor: pointer;
+              color: var(--text);
+              font-size: 0.85rem;
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              gap: 5px;
+            "
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+              />
+            </svg>
+            Budgets
+          </button>
+
+          <!-- Export CSV -->
+          <button
+            onclick="exportCSV()"
+            style="
+              background: rgba(255, 255, 255, 0.07);
+              border: 1px solid var(--border);
+              border-radius: 10px;
+              padding: 7px 12px;
+              cursor: pointer;
+              color: var(--text);
+              font-size: 0.85rem;
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              gap: 5px;
+            "
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            CSV
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="max-w-5xl mx-auto px-4 py-6">
+      <!-- Period Tabs -->
+      <div
+        style="display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap"
+      >
+        <button
+          class="period-tab active"
+          data-period="month"
+          onclick="setPeriod('month',this)"
+        >
+          This Month
+        </button>
+        <button
+          class="period-tab"
+          data-period="week"
+          onclick="setPeriod('week',this)"
+        >
+          This Week
+        </button>
+        <button
+          class="period-tab"
+          data-period="all"
+          onclick="setPeriod('all',this)"
+        >
+          All Time
+        </button>
+        <span
+          id="periodLabel"
+          style="
+            margin-left: auto;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            align-self: center;
+          "
+        ></span>
+      </div>
+
+      <!-- Balance + Stats Row -->
+      <div class="grid gap-4 mb-6" style="grid-template-columns: 1fr 1fr 1fr">
+        <!-- Balance card -->
+        <div class="balance-card" style="grid-column: 1 / -1">
+          <p
+            style="
+              font-size: 0.8rem;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.1em;
+              color: var(--text-muted);
+              margin-bottom: 0.5rem;
+            "
+          >
+            Current Balance
+          </p>
+          <div class="balance-amount" id="balanceDisplay">0 SYP</div>
+          <div
+            id="balanceUSD"
+            style="
+              color: var(--text-muted);
+              margin-top: 6px;
+              font-size: 0.95rem;
+            "
+          >
+            ≈ $0.00 USD
+          </div>
+
+          <!-- +/- Buttons -->
+          <div
+            style="
+              display: flex;
+              gap: 16px;
+              justify-content: center;
+              margin-top: 1.5rem;
+            "
+          >
+            <div style="text-align: center">
+              <button
+                class="btn-add btn-income"
+                onclick="openModal('income')"
+                title="Add Income"
+              >
+                +
+              </button>
+              <p
+                style="
+                  margin-top: 6px;
+                  font-size: 0.75rem;
+                  color: var(--text-muted);
+                  font-weight: 600;
+                "
+              >
+                Income
+              </p>
+            </div>
+            <div style="text-align: center">
+              <button
+                class="btn-add btn-expense"
+                onclick="openModal('expense')"
+                title="Add Expense"
+              >
+                −
+              </button>
+              <p
+                style="
+                  margin-top: 6px;
+                  font-size: 0.75rem;
+                  color: var(--text-muted);
+                  font-weight: 600;
+                "
+              >
+                Expense
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Income stat -->
+        <div class="glass" style="padding: 1.25rem">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              margin-bottom: 8px;
+            "
+          >
+            <span
+              style="
+                width: 34px;
+                height: 34px;
+                background: var(--green-dim);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1rem;
+              "
+              >↑</span
+            >
+            <span
+              style="
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                font-weight: 600;
+              "
+              >Total Income</span
+            >
+          </div>
+          <div
+            id="incomeDisplay"
+            style="font-size: 1.3rem; font-weight: 700; color: var(--green)"
+          >
+            0 SYP
+          </div>
+          <div
+            id="incomeUSD"
+            style="
+              font-size: 0.78rem;
+              color: var(--text-muted);
+              margin-top: 2px;
+            "
+          >
+            ≈ $0.00
+          </div>
+        </div>
+
+        <!-- Expense stat -->
+        <div class="glass" style="padding: 1.25rem">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              margin-bottom: 8px;
+            "
+          >
+            <span
+              style="
+                width: 34px;
+                height: 34px;
+                background: var(--red-dim);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1rem;
+              "
+              >↓</span
+            >
+            <span
+              style="
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                font-weight: 600;
+              "
+              >Total Spent</span
+            >
+          </div>
+          <div
+            id="expenseDisplay"
+            style="font-size: 1.3rem; font-weight: 700; color: var(--red)"
+          >
+            0 SYP
+          </div>
+          <div
+            id="expenseUSD"
+            style="
+              font-size: 0.78rem;
+              color: var(--text-muted);
+              margin-top: 2px;
+            "
+          >
+            ≈ $0.00
+          </div>
+        </div>
+
+        <!-- Savings rate -->
+        <div class="glass" style="padding: 1.25rem">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              margin-bottom: 8px;
+            "
+          >
+            <span
+              style="
+                width: 34px;
+                height: 34px;
+                background: rgba(168, 85, 247, 0.15);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1rem;
+              "
+              >%</span
+            >
+            <span
+              style="
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                font-weight: 600;
+              "
+              >Savings Rate</span
+            >
+          </div>
+          <div
+            id="savingsRate"
+            style="font-size: 1.3rem; font-weight: 700; color: var(--purple)"
+          >
+            —
+          </div>
+          <div
+            id="txCount"
+            style="
+              font-size: 0.78rem;
+              color: var(--text-muted);
+              margin-top: 2px;
+            "
+          >
+            0 transactions
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-column: chart + budget overview -->
+      <div class="grid gap-4 mb-6" style="grid-template-columns: 1fr 1fr">
+        <!-- Pie Chart -->
+        <div class="glass" style="padding: 1.5rem">
+          <p class="section-label">Spending by Category</p>
+          <div id="chartWrap">
+            <canvas id="spendChart"></canvas>
+            <div id="chartEmpty" class="empty-state" style="padding: 2rem 0">
+              <div class="icon">🍩</div>
+              <p style="font-size: 0.85rem">No expense data yet</p>
+            </div>
+          </div>
+          <div
+            id="chartLegend"
+            style="
+              margin-top: 1rem;
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+            "
+          ></div>
+        </div>
+
+        <!-- Budget Overview -->
+        <div class="glass" style="padding: 1.5rem">
+          <p class="section-label">Budget Overview</p>
+          <div id="budgetOverview">
+            <div class="empty-state" style="padding: 2rem 0">
+              <div class="icon">🎯</div>
+              <p style="font-size: 0.85rem">
+                No budgets set. Click <strong>Budgets</strong> to add.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transaction List -->
+      <div class="glass" style="padding: 1.5rem">
+        <!-- Filters -->
+        <div
+          style="
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+          "
+        >
+          <p
+            class="section-label"
+            style="margin-bottom: 0; flex: 1; min-width: 120px"
+          >
+            Transactions
+          </p>
+
+          <!-- Search -->
+          <div style="position: relative; flex: 1; min-width: 160px">
+            <svg
+              style="
+                position: absolute;
+                left: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                opacity: 0.4;
+              "
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search..."
+              style="padding-left: 32px"
+              oninput="renderTransactions()"
+            />
+          </div>
+
+          <!-- Category filter -->
+          <select
+            id="filterCategory"
+            onchange="renderTransactions()"
+            style="flex: 1; min-width: 130px"
+          >
+            <option value="">All Categories</option>
+          </select>
+
+          <!-- Date from/to -->
+          <input
+            type="date"
+            id="filterFrom"
+            onchange="renderTransactions()"
+            style="flex: 1; min-width: 130px"
+          />
+          <input
+            type="date"
+            id="filterTo"
+            onchange="renderTransactions()"
+            style="flex: 1; min-width: 130px"
+          />
+
+          <button
+            onclick="clearFilters()"
+            style="
+              background: rgba(255, 255, 255, 0.07);
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              padding: 8px 12px;
+              cursor: pointer;
+              color: var(--text-muted);
+              font-size: 0.8rem;
+              white-space: nowrap;
+            "
+          >
+            Clear
+          </button>
+        </div>
+
+        <div id="txList"></div>
+      </div>
+    </main>
+
+    <!-- ADD TRANSACTION MODAL -->
+    <div class="modal-overlay" id="txModal" onclick="handleModalClick(event)">
+      <div class="modal-box">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 1.25rem;
+          "
+        >
+          <h2
+            id="modalTitle"
+            style="font-size: 1.2rem; font-weight: 800; flex: 1"
+          ></h2>
+          <button
+            onclick="closeModal()"
+            style="
+              background: rgba(255, 255, 255, 0.08);
+              border: none;
+              border-radius: 8px;
+              padding: 6px 10px;
+              cursor: pointer;
+              color: var(--text);
+              font-size: 1rem;
+            "
+          >
+            ✕
+          </button>
+        </div>
+
+        <form id="txForm" onsubmit="submitTransaction(event)">
+          <input type="hidden" id="editId" value="" />
+          <input type="hidden" id="txType" value="" />
+
+          <div style="display: grid; gap: 14px">
+            <!-- Amount -->
+            <div>
+              <label
+                style="
+                  font-size: 0.8rem;
+                  color: var(--text-muted);
+                  font-weight: 600;
+                  display: block;
+                  margin-bottom: 5px;
+                "
+                >Amount (SYP)</label
+              >
+              <input
+                type="number"
+                id="txAmount"
+                placeholder="e.g. 500000"
+                min="1"
+                step="1"
+                required
+                oninput="updateUSDPreview()"
+              />
+              <p
+                id="usdPreview"
+                style="
+                  font-size: 0.78rem;
+                  color: var(--text-muted);
+                  margin-top: 4px;
+                  min-height: 1.2em;
+                "
+              ></p>
+            </div>
+
+            <!-- Description -->
+            <div>
+              <label
+                style="
+                  font-size: 0.8rem;
+                  color: var(--text-muted);
+                  font-weight: 600;
+                  display: block;
+                  margin-bottom: 5px;
+                "
+                >Description</label
+              >
+              <input
+                type="text"
+                id="txDesc"
+                placeholder="e.g. Grocery run"
+                maxlength="120"
+              />
+            </div>
+
+            <!-- Category -->
+            <div>
+              <label
+                style="
+                  font-size: 0.8rem;
+                  color: var(--text-muted);
+                  font-weight: 600;
+                  display: block;
+                  margin-bottom: 5px;
+                "
+                >Category</label
+              >
+              <select id="txCategory" required></select>
+            </div>
+
+            <!-- Date -->
+            <div>
+              <label
+                style="
+                  font-size: 0.8rem;
+                  color: var(--text-muted);
+                  font-weight: 600;
+                  display: block;
+                  margin-bottom: 5px;
+                "
+                >Date</label
+              >
+              <input type="date" id="txDate" required />
+            </div>
+
+            <button
+              type="submit"
+              id="submitBtn"
+              style="
+                background: var(--blue);
+                border: none;
+                border-radius: 12px;
+                padding: 14px;
+                font-size: 1rem;
+                font-weight: 700;
+                color: #fff;
+                cursor: pointer;
+                transition: opacity 0.2s;
+              "
+            >
+              Save Transaction
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SETTINGS / BUDGETS PANEL -->
+    <div id="settingsOverlay" onclick="closeSettings()"></div>
+    <div id="settingsPanel">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 1.5rem;
+        "
+      >
+        <h2 style="font-size: 1.1rem; font-weight: 800">Monthly Budgets</h2>
+        <button
+          onclick="closeSettings()"
+          style="
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--text);
+          "
+        >
+          ✕
+        </button>
+      </div>
+      <p
+        style="
+          font-size: 0.82rem;
+          color: var(--text-muted);
+          margin-bottom: 1.25rem;
+        "
+      >
+        Set a monthly spending limit per category. You'll see warnings at 80%
+        and 100%.
+      </p>
+      <div
+        id="budgetForm"
+        style="display: flex; flex-direction: column; gap: 12px"
+      ></div>
+      <button
+        onclick="saveBudgets()"
+        style="
+          margin-top: 1.5rem;
+          background: var(--blue);
+          border: none;
+          border-radius: 12px;
+          padding: 13px;
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: #fff;
+          cursor: pointer;
+          width: 100%;
+        "
+      >
+        Save Budgets
+      </button>
+    </div>
+
+    <!-- CONFIRM DIALOG -->
+    <div id="confirmDialog">
+      <div class="box">
+        <p style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem">
+          Delete Transaction?
+        </p>
+        <p
+          id="confirmMsg"
+          style="
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+          "
+        ></p>
+        <div style="display: flex; gap: 10px; justify-content: center">
+          <button
+            onclick="cancelDelete()"
+            style="
+              background: rgba(255, 255, 255, 0.07);
+              border: 1px solid var(--border);
+              border-radius: 10px;
+              padding: 10px 24px;
+              cursor: pointer;
+              color: var(--text);
+              font-weight: 600;
+            "
+          >
+            Cancel
+          </button>
+          <button
+            onclick="confirmDelete()"
+            style="
+              background: var(--red);
+              border: none;
+              border-radius: 10px;
+              padding: 10px 24px;
+              cursor: pointer;
+              color: #fff;
+              font-weight: 700;
+            "
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast"></div>
+
+    <script>
+      // ============================================================
+      // CONSTANTS & CATEGORIES
+      // ============================================================
+      const CATEGORIES = [
+        { id: "food", label: "Food & Dining", icon: "🍔", color: "#f97316" },
+        { id: "transport", label: "Transport", icon: "🚗", color: "#3b82f6" },
+        {
+          id: "entertainment",
+          label: "Entertainment",
+          icon: "🎬",
+          color: "#a855f7",
+        },
+        {
+          id: "bills",
+          label: "Bills & Utilities",
+          icon: "🧾",
+          color: "#eab308",
+        },
+        { id: "health", label: "Health", icon: "💊", color: "#22c55e" },
+        { id: "shopping", label: "Shopping", icon: "🛍️", color: "#ec4899" },
+        {
+          id: "salary",
+          label: "Salary / Income",
+          icon: "💼",
+          color: "#06b6d4",
+        },
+        { id: "savings", label: "Savings", icon: "🏦", color: "#84cc16" },
+        { id: "other", label: "Other", icon: "📌", color: "#94a3b8" },
+      ];
+
+      const catMap = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
+
+      // ============================================================
+      // STATE
+      // ============================================================
+      let transactions = [];
+      let exchangeRate = 13500;
+      let budgets = {};
+      let currentPeriod = "month";
+      let pendingDeleteId = null;
+      let spendChart = null;
+      let editingId = null;
+
+      // ============================================================
+      // LOCALSTORAGE
+      // ============================================================
+      function loadState() {
+        try {
+          transactions = JSON.parse(
+            localStorage.getItem("ft_transactions") || "[]"
+          );
+        } catch {
+          transactions = [];
+        }
+        exchangeRate =
+          parseFloat(localStorage.getItem("ft_exchange_rate")) || 13500;
+        try {
+          budgets = JSON.parse(localStorage.getItem("ft_budgets") || "{}");
+        } catch {
+          budgets = {};
+        }
+      }
+
+      function saveTransactions() {
+        localStorage.setItem("ft_transactions", JSON.stringify(transactions));
+      }
+      function saveExchangeRateLS() {
+        localStorage.setItem("ft_exchange_rate", exchangeRate);
+      }
+      function saveBudgetsLS() {
+        localStorage.setItem("ft_budgets", JSON.stringify(budgets));
+      }
+
+      // ============================================================
+      // HELPERS
+      // ============================================================
+      function uuid() {
+        return crypto.randomUUID
+          ? crypto.randomUUID()
+          : Math.random().toString(36).slice(2) + Date.now();
+      }
+
+      function formatSYP(n) {
+        return (
+          Number(n).toLocaleString("en-US", { maximumFractionDigits: 0 }) +
+          " SYP"
+        );
+      }
+
+      function formatUSD(n) {
+        return (
+          "$" +
+          (n / exchangeRate).toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
+        );
+      }
+
+      function todayStr() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      function getPeriodDates() {
+        const now = new Date();
+        if (currentPeriod === "week") {
+          const day = now.getDay();
+          const start = new Date(now);
+          start.setDate(now.getDate() - day);
+          start.setHours(0, 0, 0, 0);
+          return { start: start.toISOString().slice(0, 10), end: todayStr() };
+        }
+        if (currentPeriod === "month") {
+          return {
+            start: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+              2,
+              "0"
+            )}-01`,
+            end: todayStr(),
+          };
+        }
+        return { start: null, end: null };
+      }
+
+      function inPeriod(tx) {
+        const { start, end } = getPeriodDates();
+        if (!start) return true;
+        return tx.date >= start && tx.date <= end;
+      }
+
+      function getFiltered() {
+        const search = (document.getElementById("searchInput")?.value || "")
+          .toLowerCase()
+          .trim();
+        const filterCat =
+          document.getElementById("filterCategory")?.value || "";
+        const filterFrom = document.getElementById("filterFrom")?.value || "";
+        const filterTo = document.getElementById("filterTo")?.value || "";
+
+        return transactions
+          .filter((tx) => {
+            if (!inPeriod(tx)) return false;
+            if (
+              search &&
+              !tx.description.toLowerCase().includes(search) &&
+              !tx.amount.toString().includes(search)
+            )
+              return false;
+            if (filterCat && tx.category !== filterCat) return false;
+            if (filterFrom && tx.date < filterFrom) return false;
+            if (filterTo && tx.date > filterTo) return false;
+            return true;
+          })
+          .sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0));
+      }
+
+      function toast(msg, type = "neutral") {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.style.borderColor =
+          type === "success"
+            ? "var(--green)"
+            : type === "error"
+            ? "var(--red)"
+            : "var(--border)";
+        el.classList.add("show");
+        setTimeout(() => el.classList.remove("show"), 2800);
+      }
+
+      // ============================================================
+      // EXCHANGE RATE
+      // ============================================================
+      function saveExchangeRate() {
+        const val = parseFloat(
+          document.getElementById("exchangeRateInput").value
+        );
+        if (!val || val < 1) {
+          toast("Enter a valid exchange rate", "error");
+          return;
+        }
+        exchangeRate = val;
+        saveExchangeRateLS();
+        renderAll();
+        toast("Exchange rate updated ✓", "success");
+      }
+
+      // ============================================================
+      // STATS
+      // ============================================================
+      function computeStats() {
+        const filtered = getFiltered();
+        let income = 0,
+          expense = 0;
+        filtered.forEach((tx) => {
+          if (tx.type === "income") income += tx.amount;
+          else expense += tx.amount;
+        });
+        const balance = income - expense;
+        const rate =
+          income > 0 ? Math.round(((income - expense) / income) * 100) : null;
+        return { income, expense, balance, rate, count: filtered.length };
+      }
+
+      function renderStats() {
+        const { income, expense, balance, rate, count } = computeStats();
+
+        document.getElementById("balanceDisplay").textContent =
+          formatSYP(balance);
+        document.getElementById("balanceDisplay").style.color =
+          balance >= 0 ? "var(--text)" : "var(--red)";
+        document.getElementById("balanceUSD").textContent =
+          "≈ " + formatUSD(balance) + " USD";
+
+        document.getElementById("incomeDisplay").textContent =
+          formatSYP(income);
+        document.getElementById("incomeUSD").textContent =
+          "≈ " + formatUSD(income);
+
+        document.getElementById("expenseDisplay").textContent =
+          formatSYP(expense);
+        document.getElementById("expenseUSD").textContent =
+          "≈ " + formatUSD(expense);
+
+        document.getElementById("savingsRate").textContent =
+          rate !== null ? rate + "%" : "—";
+        document.getElementById("txCount").textContent =
+          count + " transaction" + (count !== 1 ? "s" : "");
+
+        // Period label
+        const { start, end } = getPeriodDates();
+        if (start) {
+          document.getElementById("periodLabel").textContent =
+            start + " → " + end;
+        } else {
+          document.getElementById("periodLabel").textContent =
+            "All transactions";
+        }
+      }
+
+      // ============================================================
+      // CHART
+      // ============================================================
+      function renderChart() {
+        const filtered = getFiltered().filter((tx) => tx.type === "expense");
+        const catTotals = {};
+        filtered.forEach((tx) => {
+          catTotals[tx.category] = (catTotals[tx.category] || 0) + tx.amount;
+        });
+
+        const labels = Object.keys(catTotals);
+        const data = Object.values(catTotals);
+        const colors = labels.map((k) => catMap[k]?.color || "#94a3b8");
+        const isEmpty = labels.length === 0;
+
+        document.getElementById("chartEmpty").style.display = isEmpty
+          ? "block"
+          : "none";
+        document.getElementById("spendChart").style.display = isEmpty
+          ? "none"
+          : "block";
+
+        if (isEmpty) {
+          document.getElementById("chartLegend").innerHTML = "";
+          return;
+        }
+
+        if (spendChart) spendChart.destroy();
+
+        const ctx = document.getElementById("spendChart").getContext("2d");
+        spendChart = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: labels.map((k) => catMap[k]?.label || k),
+            datasets: [
+              {
+                data,
+                backgroundColor: colors,
+                borderWidth: 2,
+                borderColor: "#1a1d27",
+                hoverOffset: 6,
+              },
+            ],
+          },
+          options: {
+            cutout: "65%",
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) =>
+                    ` ${formatSYP(ctx.raw)} (${formatUSD(ctx.raw)})`,
+                },
+              },
+            },
+            responsive: true,
+            maintainAspectRatio: true,
+          },
+        });
+
+        // Legend
+        const total = data.reduce((a, b) => a + b, 0);
+        document.getElementById("chartLegend").innerHTML = labels
+          .map(
+            (k, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.8rem;">
+      <span style="display:flex;align-items:center;gap:6px;">
+        <span style="width:10px;height:10px;border-radius:50%;background:${
+          colors[i]
+        };flex-shrink:0;"></span>
+        <span style="color:var(--text-muted);">${catMap[k]?.icon || ""} ${
+              catMap[k]?.label || k
+            }</span>
+      </span>
+      <span style="font-weight:600;">${Math.round(
+        (data[i] / total) * 100
+      )}%</span>
+    </div>
+  `
+          )
+          .join("");
+      }
+
+      // ============================================================
+      // BUDGET OVERVIEW
+      // ============================================================
+      function renderBudgetOverview() {
+        const catIds = Object.keys(budgets).filter((k) => budgets[k] > 0);
+        if (catIds.length === 0) {
+          document.getElementById("budgetOverview").innerHTML = `
+      <div class="empty-state" style="padding:2rem 0;">
+        <div class="icon">🎯</div>
+        <p style="font-size:0.85rem;">No budgets set. Click <strong>Budgets</strong> to add.</p>
+      </div>`;
+          return;
+        }
+
+        // Compute monthly spend per category (always month-based for budgets)
+        const now = new Date();
+        const monthStart = `${now.getFullYear()}-${String(
+          now.getMonth() + 1
+        ).padStart(2, "0")}-01`;
+        const catSpend = {};
+        transactions
+          .filter((tx) => tx.type === "expense" && tx.date >= monthStart)
+          .forEach((tx) => {
+            catSpend[tx.category] = (catSpend[tx.category] || 0) + tx.amount;
+          });
+
+        document.getElementById("budgetOverview").innerHTML = catIds
+          .map((k) => {
+            const cat = catMap[k];
+            const spent = catSpend[k] || 0;
+            const limit = budgets[k];
+            const pct = Math.min(Math.round((spent / limit) * 100), 100);
+            const color =
+              pct >= 100
+                ? "var(--red)"
+                : pct >= 80
+                ? "var(--orange)"
+                : "var(--green)";
+            const warn =
+              pct >= 100
+                ? " ⚠️ Over budget!"
+                : pct >= 80
+                ? " ⚠️ Near limit"
+                : "";
+            return `
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:5px;">
+          <span>${cat?.icon || ""} ${cat?.label || k}${
+              warn
+                ? `<span style="color:${color};font-weight:700;">${warn}</span>`
+                : ""
+            }</span>
+          <span style="color:var(--text-muted);">${formatSYP(
+            spent
+          )} / ${formatSYP(limit)}</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${color};"></div></div>
+      </div>`;
+          })
+          .join("");
+      }
+
+      // ============================================================
+      // TRANSACTION LIST
+      // ============================================================
+      function renderTransactions() {
+        const list = document.getElementById("txList");
+        const filtered = getFiltered();
+
+        if (filtered.length === 0) {
+          list.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No transactions found.</p></div>`;
+          return;
+        }
+
+        // Group by date
+        const groups = {};
+        filtered.forEach((tx) => {
+          if (!groups[tx.date]) groups[tx.date] = [];
+          groups[tx.date].push(tx);
+        });
+
+        const dates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+
+        list.innerHTML = dates
+          .map((date) => {
+            const dayTotal = groups[date].reduce(
+              (s, tx) => s + (tx.type === "income" ? tx.amount : -tx.amount),
+              0
+            );
+            const rows = groups[date]
+              .map((tx) => {
+                const cat = catMap[tx.category] || catMap.other;
+                const isIncome = tx.type === "income";
+                const sign = isIncome ? "+" : "−";
+                const col = isIncome ? "var(--green)" : "var(--red)";
+                return `
+        <div class="tx-row">
+          <span style="width:38px;height:38px;background:rgba(255,255,255,0.06);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">${
+            cat.icon
+          }</span>
+          <div style="min-width:0;">
+            <div style="font-weight:600;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${
+              tx.description || cat.label
+            }</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">
+              <span style="background:rgba(255,255,255,0.05);border-radius:5px;padding:1px 7px;">${
+                cat.label
+              }</span>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-weight:700;color:${col};font-size:0.95rem;">${sign}${formatSYP(
+                  tx.amount
+                )}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:1px;">${formatUSD(
+              tx.amount
+            )}</div>
+            <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:5px;">
+              <button onclick="editTransaction('${
+                tx.id
+              }')" style="background:rgba(59,130,246,0.15);border:none;border-radius:6px;padding:3px 9px;cursor:pointer;color:var(--blue);font-size:0.72rem;font-weight:600;">Edit</button>
+              <button onclick="deleteTransaction('${tx.id}','${(
+                  tx.description || ""
+                ).replace(/'/g, "\\'")} ${formatSYP(
+                  tx.amount
+                )}')" style="background:rgba(239,68,68,0.12);border:none;border-radius:6px;padding:3px 9px;cursor:pointer;color:var(--red);font-size:0.72rem;font-weight:600;">Del</button>
+            </div>
+          </div>
+        </div>`;
+              })
+              .join("");
+
+            const dateDisplay = new Date(date + "T12:00:00").toLocaleDateString(
+              "en-US",
+              { weekday: "short", month: "short", day: "numeric" }
+            );
+            const dayColor = dayTotal >= 0 ? "var(--green)" : "var(--red)";
+
+            return `
+      <div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0 6px;border-bottom:1px solid var(--border);margin-bottom:4px;">
+          <span style="font-size:0.78rem;font-weight:700;color:var(--text-muted);">${dateDisplay}</span>
+          <span style="font-size:0.78rem;font-weight:700;color:${dayColor};">${
+              dayTotal >= 0 ? "+" : ""
+            }${formatSYP(dayTotal)}</span>
+        </div>
+        ${rows}
+      </div>`;
+          })
+          .join("");
+      }
+
+      // ============================================================
+      // MODAL
+      // ============================================================
+      function openModal(type, prefill = null) {
+        editingId = prefill ? prefill.id : null;
+        document.getElementById("txType").value = type || prefill?.type;
+        document.getElementById("editId").value = editingId || "";
+
+        const t = type || prefill?.type;
+        const isIncome = t === "income";
+        document.getElementById("modalTitle").textContent = editingId
+          ? "Edit Transaction"
+          : isIncome
+          ? "➕ Add Income"
+          : "➖ Add Expense";
+        document.getElementById("submitBtn").style.background = isIncome
+          ? "var(--green)"
+          : "var(--red)";
+
+        // Populate category
+        const catSel = document.getElementById("txCategory");
+        catSel.innerHTML = CATEGORIES.filter((c) =>
+          isIncome ? c.id !== "bills" && c.id !== "transport" : true
+        )
+          .map((c) => `<option value="${c.id}">${c.icon} ${c.label}</option>`)
+          .join("");
+
+        if (prefill) {
+          document.getElementById("txAmount").value = prefill.amount;
+          document.getElementById("txDesc").value = prefill.description || "";
+          document.getElementById("txCategory").value = prefill.category;
+          document.getElementById("txDate").value = prefill.date;
+        } else {
+          document.getElementById("txAmount").value = "";
+          document.getElementById("txDesc").value = "";
+          document.getElementById("txCategory").value = isIncome
+            ? "salary"
+            : "food";
+          document.getElementById("txDate").value = todayStr();
+        }
+
+        updateUSDPreview();
+        document.getElementById("txModal").classList.add("open");
+        setTimeout(() => document.getElementById("txAmount").focus(), 300);
+      }
+
+      function closeModal() {
+        document.getElementById("txModal").classList.remove("open");
+        editingId = null;
+      }
+
+      function handleModalClick(e) {
+        if (e.target === document.getElementById("txModal")) closeModal();
+      }
+
+      function updateUSDPreview() {
+        const amt = parseFloat(document.getElementById("txAmount").value);
+        const el = document.getElementById("usdPreview");
+        if (amt > 0) {
+          el.textContent = `≈ ${formatUSD(amt)} USD`;
+          el.style.color = "var(--blue)";
+        } else {
+          el.textContent = "";
+        }
+      }
+
+      function submitTransaction(e) {
+        e.preventDefault();
+        const amount = parseFloat(document.getElementById("txAmount").value);
+        if (!amount || amount <= 0) {
+          toast("Enter a valid amount", "error");
+          return;
+        }
+
+        const tx = {
+          id: editingId || uuid(),
+          type: document.getElementById("txType").value,
+          amount,
+          description: document.getElementById("txDesc").value.trim(),
+          category: document.getElementById("txCategory").value,
+          date: document.getElementById("txDate").value,
+          createdAt: editingId
+            ? transactions.find((t) => t.id === editingId)?.createdAt ||
+              new Date().toISOString()
+            : new Date().toISOString(),
+        };
+
+        if (editingId) {
+          const idx = transactions.findIndex((t) => t.id === editingId);
+          if (idx !== -1) transactions[idx] = tx;
+          toast("Transaction updated ✓", "success");
+        } else {
+          transactions.push(tx);
+          toast("Transaction added ✓", "success");
+        }
+
+        saveTransactions();
+        closeModal();
+        renderAll();
+      }
+
+      // ============================================================
+      // EDIT / DELETE
+      // ============================================================
+      function editTransaction(id) {
+        const tx = transactions.find((t) => t.id === id);
+        if (!tx) return;
+        openModal(tx.type, tx);
+      }
+
+      function deleteTransaction(id, label) {
+        pendingDeleteId = id;
+        document.getElementById("confirmMsg").textContent = label;
+        document.getElementById("confirmDialog").classList.add("open");
+      }
+
+      function cancelDelete() {
+        pendingDeleteId = null;
+        document.getElementById("confirmDialog").classList.remove("open");
+      }
+
+      function confirmDelete() {
+        if (pendingDeleteId) {
+          transactions = transactions.filter((t) => t.id !== pendingDeleteId);
+          saveTransactions();
+          renderAll();
+          toast("Transaction deleted", "neutral");
+        }
+        cancelDelete();
+      }
+
+      // ============================================================
+      // PERIOD
+      // ============================================================
+      function setPeriod(period, btn) {
+        currentPeriod = period;
+        document
+          .querySelectorAll(".period-tab")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderAll();
+      }
+
+      // ============================================================
+      // FILTERS
+      // ============================================================
+      function clearFilters() {
+        document.getElementById("searchInput").value = "";
+        document.getElementById("filterCategory").value = "";
+        document.getElementById("filterFrom").value = "";
+        document.getElementById("filterTo").value = "";
+        renderTransactions();
+      }
+
+      function populateCategoryFilter() {
+        const sel = document.getElementById("filterCategory");
+        sel.innerHTML =
+          '<option value="">All Categories</option>' +
+          CATEGORIES.map(
+            (c) => `<option value="${c.id}">${c.icon} ${c.label}</option>`
+          ).join("");
+      }
+
+      // ============================================================
+      // SETTINGS / BUDGETS
+      // ============================================================
+      function openSettings() {
+        // Render budget input fields
+        document.getElementById("budgetForm").innerHTML = CATEGORIES.filter(
+          (c) => c.id !== "salary" && c.id !== "savings"
+        )
+          .map(
+            (c) => `
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:1.2rem;width:26px;text-align:center;">${
+          c.icon
+        }</span>
+        <label style="flex:1;font-size:0.85rem;color:var(--text-muted);">${
+          c.label
+        }</label>
+        <input type="number" id="budget_${c.id}" value="${
+              budgets[c.id] || ""
+            }" placeholder="No limit" min="0" step="1000" style="width:130px;" />
+      </div>`
+          )
+          .join("");
+
+        document.getElementById("settingsPanel").classList.add("open");
+        document.getElementById("settingsOverlay").classList.add("open");
+      }
+
+      function closeSettings() {
+        document.getElementById("settingsPanel").classList.remove("open");
+        document.getElementById("settingsOverlay").classList.remove("open");
+      }
+
+      function saveBudgets() {
+        CATEGORIES.filter(
+          (c) => c.id !== "salary" && c.id !== "savings"
+        ).forEach((c) => {
+          const val =
+            parseFloat(
+              document.getElementById("budget_" + c.id)?.value || "0"
+            ) || 0;
+          if (val > 0) budgets[c.id] = val;
+          else delete budgets[c.id];
+        });
+        saveBudgetsLS();
+        renderBudgetOverview();
+        toast("Budgets saved ✓", "success");
+        closeSettings();
+      }
+
+      // ============================================================
+      // CSV EXPORT
+      // ============================================================
+      function exportCSV() {
+        if (transactions.length === 0) {
+          toast("No transactions to export", "error");
+          return;
+        }
+        const rows = [
+          [
+            "Date",
+            "Description",
+            "Category",
+            "Type",
+            "Amount (SYP)",
+            "Amount (USD)",
+            "Exchange Rate",
+          ],
+        ];
+        transactions
+          .sort((a, b) => b.date.localeCompare(a.date))
+          .forEach((tx) => {
+            rows.push([
+              tx.date,
+              `"${(tx.description || "").replace(/"/g, '""')}"`,
+              catMap[tx.category]?.label || tx.category,
+              tx.type,
+              tx.amount,
+              (tx.amount / exchangeRate).toFixed(2),
+              exchangeRate,
+            ]);
+          });
+        const csv = rows.map((r) => r.join(",")).join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `finance-${todayStr()}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast("CSV downloaded ✓", "success");
+      }
+
+      // ============================================================
+      // RENDER ALL
+      // ============================================================
+      function renderAll() {
+        renderStats();
+        renderChart();
+        renderBudgetOverview();
+        renderTransactions();
+      }
+
+      // ============================================================
+      // INIT
+      // ============================================================
+      function init() {
+        loadState();
+        document.getElementById("exchangeRateInput").value = exchangeRate;
+        populateCategoryFilter();
+        renderAll();
+        // Keyboard: Esc closes modal
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") {
+            closeModal();
+            closeSettings();
+            cancelDelete();
+          }
+        });
+      }
+
+      init();
+    </script>
+  </body>
+</html>
