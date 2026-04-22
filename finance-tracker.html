@@ -524,7 +524,8 @@ let currentPage = 'dashboard';
 async function signInGoogle() {
   const {error} = await sb.auth.signInWithOAuth({
     provider:'google',
-    options:{ redirectTo: 'https://kareemalmasri.github.io/M7FZTI/finance-tracker.html' }
+    options:{ redirectTo: 'https://69e9255466ec966947af6c43--timely-seahorse-7fdb8f.netlify.app/finance-tracker.html'
+ }
   });
   if(error) showLoginErr(error.message);
 }
